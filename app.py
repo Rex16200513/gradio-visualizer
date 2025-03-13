@@ -4,6 +4,7 @@ import torchvision
 import torch.nn as nn
 from PIL import Image
 from torchvision.transforms import Compose, Resize, ToTensor, Normalize
+import os
 
 # 读取标签文件
 with open('label.txt', 'r') as f:
@@ -34,4 +35,6 @@ def predict_image(image):
 
 # Gradio 接口
 iface = gr.Interface(fn=predict_image, inputs=gr.Image(type="pil"), outputs="text")
-iface.launch()
+
+# 启动 Gradio 服务并绑定端口
+iface.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 5000)))
