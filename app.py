@@ -12,25 +12,25 @@ with open('label.txt', 'r') as f:
 
 # 加载模型
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torchvision.models.resnet50(pretrained=False)
-model.fc = nn.Linear(model.fc.in_features, len(class_labels))
-model.load_state_dict(torch.load("best_model.pth", map_location=device))
-model.eval()
+model = torchvision.models.resnet50(weights=None)  # 使用最新的API，替代 'pretrained=False'
+model.fc = nn.Linear(model.fc.in_features, len(class_labels))  # 调整全连接层以匹配标签数量
+model.load_state_dict(torch.load("best_model.pth", map_location=device))  # 加载训练好的模型权重
+model.eval()  # 设置模型为评估模式
 
 # 图像预处理
 transform = Compose([
-    Resize((256, 256)),
-    ToTensor(),
-    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    Resize((256, 256)),  # 调整图片大小
+    ToTensor(),  # 转换为Tensor
+    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # 标准化
 ])
 
 # 预测函数
 def predict_image(image):
-    image = transform(image).unsqueeze(0).to(device)
-    with torch.no_grad():
-        outputs = model(image)
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
-        predicted_idx = torch.argmax(probabilities).item()
+    image = transform(image).unsqueeze(0).to(device)  # 对图像进行预处理，并增加批次维度
+    with torch.no_grad():  # 禁用梯度计算，减少内存消耗
+        outputs = model(image)  # 进行预测
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]  # 计算预测的类别概率
+        predicted_idx = torch.argmax(probabilities).item()  # 获取最大概率的索引
     return f"预测类别: {class_labels[predicted_idx]} (置信度: {probabilities[predicted_idx]:.2f})"
 
 # Gradio 接口
