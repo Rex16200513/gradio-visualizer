@@ -12,10 +12,19 @@ with open('label.txt', 'r') as f:
 
 # 加载模型
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torchvision.models.resnet50(weights=None)  # 使用最新的API，替代 'pretrained=False'
-model.fc = nn.Linear(model.fc.in_features, len(class_labels))  # 调整全连接层以匹配标签数量
-model.load_state_dict(torch.load("best_model.pth", map_location=device))  # 加载训练好的模型权重
-model.eval()  # 设置模型为评估模式
+model = torchvision.models.resnet50(weights=None)  # 不加载预训练权重
+
+# 定义模型的全连接层（确保与训练时一致）
+model.fc = nn.Sequential(
+    nn.Linear(model.fc.in_features, 512),  # 第一层
+    nn.ReLU(),
+    nn.Dropout(0.5),
+    nn.Linear(512, len(class_labels))  # 根据标签数量调整输出层
+)
+
+# 加载训练好的模型权重
+model.load_state_dict(torch.load("best_model.pth", map_location=device))
+model.eval()  # 设置为评估模式
 
 # 图像预处理
 transform = Compose([
