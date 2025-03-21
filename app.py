@@ -40,7 +40,7 @@ def predict_image(image):
         outputs = model(image)  # 进行预测
         probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]  # 计算预测的类别概率
         predicted_idx = torch.argmax(probabilities).item()  # 获取最大概率的索引
-    return f"预测类别: {class_labels[predicted_idx]} (置信度: {probabilities[predicted_idx]:.2f})"
+    return f"Predicted Class: {class_labels[predicted_idx]} (Confidence: {probabilities[predicted_idx]:.2f})"
 
 # Gradio 接口
 iface = gr.Interface(fn=predict_image, inputs=gr.Image(type="pil"), outputs="text")
