@@ -1,5 +1,4 @@
 import gradio as gr
-from gradio.themes.monochrome import Monochrome  # 加这一行
 import torch
 import torchvision
 import torch.nn as nn
@@ -7,49 +6,77 @@ from PIL import Image
 from torchvision.transforms import Compose, Resize, ToTensor, Normalize
 import os
 
-# 读取标签文件
+# ===== 自定义真正的黑夜主题 =====
+import gradio.themes.base as base
+
+class TrueDarkTheme(base.Base):
+    def __init__(self):
+        super().__init__(
+            primary_hue="blue",
+            neutral_hue="slate",
+            font=[base.GoogleFont("Inter"), "system-ui", "sans-serif"],
+            spacing_size="sm",
+            radius_size="md",
+            text_size="md",
+            dark=True,
+            colors={
+                "background": "#111111",
+                "text": "#FFFFFF",
+                "button-primary-background": "#333333",
+                "button-primary-text": "#FFFFFF",
+                "input-background": "#222222",
+                "input-text": "#FFFFFF",
+            }
+        )
+
+theme = TrueDarkTheme()
+
+# ===== 读取标签文件 =====
 with open('label.txt', 'r') as f:
     class_labels = [line.strip() for line in f.readlines()]
 
-# 加载模型
+# ===== 加载模型 =====
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torchvision.models.resnet50(weights=None)  # 不加载预训练权重
+model = torchvision.models.resnet50(weights=None)
 
-# 定义模型的全连接层（确保与训练时一致）
+# 修改全连接层
 model.fc = nn.Sequential(
-    nn.Linear(model.fc.in_features, 512),  # 第一层
+    nn.Linear(model.fc.in_features, 512),
     nn.ReLU(),
     nn.Dropout(0.5),
-    nn.Linear(512, len(class_labels))  # 根据标签数量调整输出层
+    nn.Linear(512, len(class_labels))
 )
 
-# 加载训练好的模型权重，strict=False 允许忽略模型结构不匹配的部分
+# 加载权重
 model.load_state_dict(torch.load("best_model.pth", map_location=device), strict=False)
-model.eval()  # 设置为评估模式
+model.eval()
 
 # 图像预处理
 transform = Compose([
-    Resize((256, 256)),  # 调整图片大小
-    ToTensor(),  # 转换为Tensor
-    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # 标准化
+    Resize((256, 256)),
+    ToTensor(),
+    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
 
-# 预测函数
+# ===== 预测函数 =====
 def predict_image(image):
-    image = transform(image).unsqueeze(0).to(device)  # 对图像进行预处理，并增加批次维度
-    with torch.no_grad():  # 禁用梯度计算，减少内存消耗
-        outputs = model(image)  # 进行预测
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]  # 计算预测的类别概率
-        predicted_idx = torch.argmax(probabilities).item()  # 获取最大概率的索引
+    image = transform(image).unsqueeze(0).to(device)
+    with torch.no_grad():
+        outputs = model(image)
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
+        predicted_idx = torch.argmax(probabilities).item()
     return f"Predicted class: {class_labels[predicted_idx]} (Confidence: {probabilities[predicted_idx]:.2f})"
 
-# Gradio 接口（英文提示）
+# ===== Gradio 接口 =====
 iface = gr.Interface(
     fn=predict_image,
     inputs=gr.Image(type="pil", label="Upload an image"),
     outputs=gr.Text(label="Prediction Result"),
-    theme=Monochrome()
+    theme=theme,
+    title="Nature Interaction Classifier",
+    description="Upload an image to classify the type of human-nature interaction behavior it represents.",
+    article="Trained on ResNet50 with human-nature interaction dataset collected from social media."
 )
 
-# 启动 Gradio 服务并绑定端口
+# ===== 启动服务 =====
 iface.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 5000)))
