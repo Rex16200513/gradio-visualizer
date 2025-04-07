@@ -45,9 +45,9 @@ def predict_image(image):
 # Gradio 接口（英文提示）
 iface = gr.Interface(
     fn=predict_image,
-    inputs=gr.Image(type="pil", label="Upload an image"),  # 英文提示
-    outputs=gr.Text(label="Prediction Result"),  # 英文提示
-    theme="dark"  # 添加这行启用黑夜模式
+    inputs=gr.Image(type="pil", label="Upload an image"),
+    outputs=gr.Text(label="Prediction Result"),
+    theme=gr.themes.Base(mode=ThemeMode.DARK)  # 使用 Gradio 官方的黑夜模式
 )
 
 # 启动 Gradio 服务并绑定端口
