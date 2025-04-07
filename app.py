@@ -1,4 +1,6 @@
 import gradio as gr
+from gradio.themes.base import Base
+from gradio.themes.utils import ThemeMode  # 确保有这行
 import torch
 import torchvision
 import torch.nn as nn
@@ -47,7 +49,7 @@ iface = gr.Interface(
     fn=predict_image,
     inputs=gr.Image(type="pil", label="Upload an image"),
     outputs=gr.Text(label="Prediction Result"),
-    theme=gr.themes.Base(mode=ThemeMode.DARK)  # 使用 Gradio 官方的黑夜模式
+    theme=Base(mode=ThemeMode.DARK)  # 使用 Base 而不是 gr.themes.Base
 )
 
 # 启动 Gradio 服务并绑定端口
