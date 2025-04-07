@@ -46,7 +46,7 @@ def predict_image(image):
 iface = gr.Interface(
     fn=predict_image,
     inputs=gr.Image(type="pil", label="Upload an image"),  # 英文提示
-    outputs=gr.Text(label="Prediction Result")  # 英文提示
+    outputs=gr.Text(label="Prediction Result"),  # 英文提示
     theme="dark"  # 添加这行启用黑夜模式
 )
 
